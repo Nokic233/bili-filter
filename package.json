@@ -15,6 +15,7 @@
         "postinstall": "wxt prepare"
     },
     "dependencies": {
+        "element-plus": "^2.11.5",
         "vue": "^3.5.22"
     },
     "devDependencies": {

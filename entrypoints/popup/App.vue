@@ -1,30 +1,43 @@
 <script lang="ts" setup>
-import HelloWorld from '@/components/HelloWorld.vue';
+import { ref, onMounted, toRaw } from 'vue';
+import { ElForm, ElFormItem, ElButton } from 'element-plus';
+import DynamicTags from '@/components/DynamicTags.vue';
+import { formStorage } from '@/utils/storage';
+
+const form = ref({
+    videoTitle: [] as string[],
+    authorName: [] as string[],
+});
+
+onMounted(async () => {
+    form.value = await formStorage.getValue();
+});
+
+function handleSave() {
+    formStorage.setValue(toRaw(form.value));
+}
 </script>
 
 <template>
     <div>
-        <a href="https://wxt.dev" target="_blank">
-            <img src="/wxt.svg" class="logo" alt="WXT logo" />
-        </a>
-        <a href="https://vuejs.org/" target="_blank">
-            <img src="@/assets/vue.svg" class="logo vue" alt="Vue logo" />
-        </a>
+        <el-form :model="form" label-width="auto" @submit.prevent>
+            <el-form-item label="视频标题">
+                <DynamicTags
+                    v-model:dynamicTags="form.videoTitle"
+                ></DynamicTags>
+            </el-form-item>
+            <el-form-item label="作者名">
+                <DynamicTags
+                    v-model:dynamicTags="form.authorName"
+                ></DynamicTags>
+            </el-form-item>
+            <el-form-item>
+                <el-button type="primary" @click="handleSave"
+                    >保存并过滤</el-button
+                >
+            </el-form-item>
+        </el-form>
     </div>
-    <HelloWorld msg="WXT + Vue" />
 </template>
 
-<style scoped>
-.logo {
-    height: 6em;
-    padding: 1.5em;
-    will-change: filter;
-    transition: filter 300ms;
-}
-.logo:hover {
-    filter: drop-shadow(0 0 2em #54bc4ae0);
-}
-.logo.vue:hover {
-    filter: drop-shadow(0 0 2em #42b883aa);
-}
-</style>
+<style scoped></style>
