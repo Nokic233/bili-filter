@@ -1,8 +1,8 @@
 {
-    "name": "wxt-vue-starter",
-    "description": "manifest.json description",
+    "name": "bili-filter",
+    "description": "B站过滤插件，隐藏标题和作者，简洁清爽",
     "private": true,
-    "version": "0.0.0",
+    "version": "1.0.0",
     "type": "module",
     "scripts": {
         "dev": "wxt",
