@@ -1,7 +1,37 @@
-# WXT + Vue 3
+## 🧩 B站视频过滤助手
 
-This template should help get you started developing with Vue 3 in WXT.
+![chrome_BUAII4OAtt.png](https://github.com/Nokic233/bili-filter/blob/master/img/chrome_BUAII4OAtt.png)
 
-## Recommended IDE Setup
+**让你的B站页面更干净、更专注。**
 
-- [VS Code](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar).
+这是一款专为哔哩哔哩（Bilibili）用户打造的浏览器插件，可根据 **视频标题** 或 **UP主名称** 自动屏蔽不想看到的内容。
+无论是首页推荐、热门榜单、每周必看还是入站必刷页面，统统支持过滤。
+
+---
+
+### ✨ 功能特性
+
+* 🔍 **关键词过滤**：屏蔽包含特定文字的视频标题
+* 🚫 **UP主过滤**：屏蔽来自指定UP主的视频
+* 🏠 **全局适配**：首页、热门、每周必看、入站必刷等页面均支持
+* ⚡ **实时过滤**：无需刷新页面，立即生效
+* 💾 **自动保存**：过滤设置自动保存，下次打开依然有效
+
+---
+
+### 💬 使用场景
+
+* 想屏蔽标题党、低质量内容
+* 想过滤不感兴趣的UP主
+* 想让B站首页更清爽、更个性化
+
+---
+
+### 📬 反馈与支持
+
+如果你在使用过程中遇到问题，或希望新增功能，欢迎通过以下方式联系我：
+
+* 🐙 GitHub 项目地址：[https://github.com/Nokic233/bili-filter](https://github.com/Nokic233/bili-filter)
+  👉 欢迎在 **Issues** 中反馈你的建议或Bug。
+* 📧 邮箱联系：**[k1466006376@163.com](mailto:k1466006376@163.com)**
+
