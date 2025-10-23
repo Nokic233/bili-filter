@@ -1,6 +1,8 @@
+import '@/assets/css/filterMode.css';
 import { ContentScriptContext, WxtWindowEventMap } from '#imports';
 import { formStorage } from '@/utils/storage';
 import { waitForSelector } from '@/utils/dom';
+import { isArray, isObject } from '@/utils/base';
 
 // 综合热门 https://www.bilibili.com/v/popular/all
 // 每周必看 https://www.bilibili.com/v/popular/weekly
@@ -153,11 +155,24 @@ const pageConfigs = [
             authorName: '.vidoInfo .info .subtitle .up .upName',
         },
     },
+    // !WARN 首页必须放在最后
+    {
+        name: '首页',
+        pattern: '*://*.bilibili.com/*',
+        selectors: [
+            {
+                container:
+                    '#i_cecream > div.bili-feed4 > main > div.feed2 > div > div.container.is-version8',
+                videoTitle: '.bili-video-card__info--tit',
+                authorName: '.bili-video-card__info--author',
+            },
+        ],
+    },
 ];
 
 // 使用Promise来确保清理操作完成
 let cleanupPromise: Promise<void> = Promise.resolve();
-let currentCleanup: (() => void) | undefined = undefined;
+let currentCleanupFunctions: Array<() => void> = [];
 
 export default defineContentScript({
     matches: ['*://*.bilibili.com/*'],
@@ -174,20 +189,37 @@ export default defineContentScript({
             // 确保前一个清理操作完成后再进行新的初始化
             cleanupPromise = cleanupPromise.then(() => {
                 // 执行当前的清理函数
-                if (currentCleanup) {
-                    currentCleanup();
-                    currentCleanup = undefined;
+                if (currentCleanupFunctions.length > 0) {
+                    currentCleanupFunctions.forEach(fn => fn && fn());
+                    currentCleanupFunctions = [];
                 }
 
                 // 匹配当前 URL
                 for (const config of pageConfigs) {
                     if (new MatchPattern(config.pattern).includes(newUrl)) {
-                        currentCleanup = init(
-                            ctx,
-                            config.selectors.container,
-                            config.selectors.videoTitle,
-                            config.selectors.authorName
-                        );
+                        if (isObject(config.selectors)) {
+                            const cleanupFn = init(
+                                ctx,
+                                config.selectors.container,
+                                config.selectors.videoTitle,
+                                config.selectors.authorName
+                            );
+                            if (cleanupFn) {
+                                currentCleanupFunctions.push(cleanupFn);
+                            }
+                        } else if (isArray(config.selectors)) {
+                            config.selectors.forEach(selector => {
+                                const cleanupFn = init(
+                                    ctx,
+                                    selector.container,
+                                    selector.videoTitle,
+                                    selector.authorName
+                                );
+                                if (cleanupFn) {
+                                    currentCleanupFunctions.push(cleanupFn);
+                                }
+                            });
+                        }
                         break;
                     }
                 }
@@ -251,7 +283,11 @@ function init(
      * @returns 清理函数
      */
     async function addMask(
-        storage: { videoTitle: string[]; authorName: string[] },
+        storage: {
+            videoTitle: string[];
+            authorName: string[];
+            filterMode: 'blur' | 'hide';
+        },
         selectorForList: string,
         selectorForVideoTitle: string,
         selectorForAuthorName: string
@@ -262,6 +298,7 @@ function init(
             const target = document.querySelector(selectorForList);
 
             if (!target) return;
+            target.classList.add('bili-filter-container');
 
             /**
              * 处理单个卡片元素
@@ -272,38 +309,40 @@ function init(
                     return;
                 }
 
+                card.classList.add('bili-filter-card__init');
+
                 // 获取视频标题
-                const videoTitle =
+                const videoTitle = (
                     card
                         .querySelector(selectorForVideoTitle)
                         ?.getAttribute('title') ||
                     card.querySelector(selectorForVideoTitle)?.textContent ||
-                    '';
+                    ''
+                ).trim();
 
                 // 获取作者名称
-                const authorName =
+                const authorName = (
                     card
                         .querySelector(selectorForAuthorName)
                         ?.getAttribute('title') ||
                     card.querySelector(selectorForAuthorName)?.textContent ||
-                    '';
+                    ''
+                ).trim();
 
-                // 应用过滤条件
+                const filterClass = `bili-filter-mode-${storage.filterMode}`;
+
+                card.classList.remove(
+                    'bili-filter-mode-blur',
+                    'bili-filter-mode-hide'
+                );
+
                 if (
                     storage.videoTitle.some(title =>
                         videoTitle.includes(title)
                     ) ||
-                    storage.authorName.some(name => authorName.includes(name))
+                    storage.authorName.some(name => authorName === name)
                 ) {
-                    // 应用模糊效果
-                    card.style.filter = 'blur(16px)';
-                    card.style.pointerEvents = 'none';
-                    card.style.userSelect = 'none';
-                } else {
-                    // 移除模糊效果
-                    card.style.filter = 'none';
-                    card.style.pointerEvents = 'auto';
-                    card.style.userSelect = 'auto';
+                    card.classList.add(filterClass);
                 }
             }
 

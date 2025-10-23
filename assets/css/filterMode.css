@@ -1,0 +1,20 @@
+.bili-filter-mode-blur {
+    filter: blur(16px) !important;
+    user-select: none !important;
+}
+.bili-filter-mode-blur:hover {
+    filter: none !important;
+    user-select: auto !important;
+}
+
+.bili-filter-mode-hide {
+    visibility: hidden !important;
+}
+
+.bili-filter-container {
+    justify-content: space-between !important;
+}
+
+.bili-filter-card__init {
+    margin-right: 0 !important;
+}

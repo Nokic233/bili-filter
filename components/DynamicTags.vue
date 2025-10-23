@@ -3,6 +3,7 @@
         <el-tag
             v-for="tag in dynamicTags"
             :key="tag"
+            size="large"
             closable
             :disable-transitions="false"
             @close="handleClose(tag)"
@@ -14,17 +15,18 @@
             ref="InputRef"
             v-model="inputValue"
             class="w-20"
-            size="small"
+            size="default"
+            placeholder="请输入关键字并回车(enter)"
             @keyup.enter="handleInputConfirm"
             @blur="handleInputConfirm"
         />
         <el-button
             v-else
             class="button-new-tag"
-            size="small"
+            size="default"
             @click="showInput"
         >
-            + New Tag
+            + 添加
         </el-button>
     </div>
 </template>
