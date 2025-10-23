@@ -1,6 +1,6 @@
 {
     "name": "bili-filter",
-    "description": "B站过滤插件，隐藏标题和作者，简洁清爽",
+    "description": "B站过滤插件，通过关键词过滤B站视频",
     "private": true,
     "version": "1.0.0",
     "type": "module",
