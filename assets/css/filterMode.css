@@ -8,8 +8,8 @@
 }
 
 .bili-filter-mode-hide {
-    visibility: hidden !important;
-    /* display: none !important; */
+    /* visibility: hidden !important; */
+    display: none !important;
 }
 
 .bili-filter-container {

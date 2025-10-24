@@ -9,7 +9,7 @@ import {
 } from 'element-plus';
 import DynamicTags from '@/components/DynamicTags.vue';
 import { formStorage } from '@/utils/storage';
-import { name } from '@/package.json';
+import { name, version } from '@/package.json';
 
 const form = ref({
     videoTitle: [] as string[],
@@ -32,11 +32,16 @@ watch(
 function handleSave() {
     formStorage.setValue(toRaw(form.value));
 }
+
+function open(url: string) {
+    window.open(url, '_blank');
+}
 </script>
 
 <template>
     <div>
         <div class="title">{{ name.toLocaleUpperCase() }}设置</div>
+
         <el-form
             :model="form"
             label-width="auto"
@@ -59,12 +64,23 @@ function handleSave() {
                     <el-radio value="hide">隐藏</el-radio>
                 </el-radio-group>
             </el-form-item>
-            <!-- <el-form-item>
-                <el-button type="primary" @click="handleSave"
-                    >保存设置</el-button
-                >
-            </el-form-item> -->
         </el-form>
+
+        <footer class="footer">
+            <el-button
+                link
+                type="warning"
+                @click="open('https://github.com/Nokic233/bili-filter/issues')"
+                >反馈</el-button
+            >
+            <div>V{{ version }}</div>
+            <el-button
+                link
+                type="primary"
+                @click="open('https://github.com/Nokic233/bili-filter')"
+                >Github</el-button
+            >
+        </footer>
     </div>
 </template>
 
@@ -75,5 +91,9 @@ function handleSave() {
     margin-bottom: 10px;
     text-align: center;
     color: var(--el-color-primary);
+}
+.footer {
+    display: flex;
+    justify-content: space-between;
 }
 </style>

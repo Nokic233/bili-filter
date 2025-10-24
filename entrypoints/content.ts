@@ -345,6 +345,10 @@ function init(
                 }
 
                 card.classList.add('bili-filter-card__init');
+                card.classList.remove(
+                    'bili-filter-mode-blur',
+                    'bili-filter-mode-hide'
+                );
 
                 // 获取视频标题
                 const videoTitle = (
@@ -365,11 +369,6 @@ function init(
                 ).trim();
 
                 const filterClass = `bili-filter-mode-${storage.filterMode}`;
-
-                card.classList.remove(
-                    'bili-filter-mode-blur',
-                    'bili-filter-mode-hide'
-                );
 
                 if (
                     storage.videoTitle.some(title =>

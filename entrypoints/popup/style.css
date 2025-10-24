@@ -14,20 +14,25 @@
     -webkit-text-size-adjust: 100%;
 }
 
+@media (prefers-color-scheme: light) {
+    :root {
+        color: #213547;
+        background-color: #ffffff;
+    }
+}
+
 body {
     margin: 0;
     padding: 10px;
     display: flex;
     min-width: 320px;
+    font-size: 14px;
 }
 
 #app {
     width: 100%;
 }
 
-@media (prefers-color-scheme: light) {
-    :root {
-        color: #213547;
-        background-color: #ffffff;
-    }
+.cursor-pointer {
+    cursor: pointer;
 }
