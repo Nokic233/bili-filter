@@ -8,8 +8,29 @@
 }
 
 .bili-filter-mode-hide {
-    /* visibility: hidden !important; */
     display: none !important;
+}
+
+.bili-filter-mode-tip {
+    position: relative !important;
+    user-select: none !important;
+    pointer-events: none !important;
+}
+
+.bili-filter-mode-tip::after {
+    content: attr(data-filter-reason); /* 从属性读取显示文字 */
+    position: absolute;
+    inset: 0; /* 等价于 top/right/bottom/left: 0 */
+    background: rgba(0, 0, 0, 0.94);
+    border-radius: 10px;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: bold;
+    z-index: 10;
+    pointer-events: none; /* 防止遮挡点击 */
 }
 
 .bili-filter-container {

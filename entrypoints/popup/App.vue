@@ -14,7 +14,7 @@ import { name, version } from '@/package.json';
 const form = ref({
     videoTitle: [] as string[],
     authorName: [] as string[],
-    filterMode: 'blur' as 'blur' | 'hide',
+    filterMode: 'blur' as 'blur' | 'hide' | 'tip',
 });
 
 onMounted(async () => {
@@ -62,6 +62,7 @@ function open(url: string) {
                 <el-radio-group v-model="form.filterMode">
                     <el-radio value="blur">模糊</el-radio>
                     <el-radio value="hide">隐藏</el-radio>
+                    <el-radio value="tip">提示</el-radio>
                 </el-radio-group>
             </el-form-item>
         </el-form>

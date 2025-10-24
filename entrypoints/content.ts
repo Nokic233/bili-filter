@@ -316,7 +316,7 @@ function init(
         storage: {
             videoTitle: string[];
             authorName: string[];
-            filterMode: 'blur' | 'hide';
+            filterMode: 'blur' | 'hide' | 'tip';
         },
         selectorForList: string,
         selectorForVideoTitle: string,
@@ -347,8 +347,10 @@ function init(
                 card.classList.add('bili-filter-card__init');
                 card.classList.remove(
                     'bili-filter-mode-blur',
-                    'bili-filter-mode-hide'
+                    'bili-filter-mode-hide',
+                    'bili-filter-mode-tip'
                 );
+                card.removeAttribute('data-filter-reason');
 
                 // 获取视频标题
                 const videoTitle = (
@@ -368,15 +370,34 @@ function init(
                     ''
                 ).trim();
 
-                const filterClass = `bili-filter-mode-${storage.filterMode}`;
+                const matchVideoTitleArr = storage.videoTitle.filter(title =>
+                    videoTitle.includes(title)
+                );
+                const matchAuthorNameArr = storage.authorName.filter(
+                    name => authorName === name
+                );
 
-                if (
-                    storage.videoTitle.some(title =>
-                        videoTitle.includes(title)
-                    ) ||
-                    storage.authorName.some(name => authorName === name)
-                ) {
+                if (matchVideoTitleArr.length || matchAuthorNameArr.length) {
+                    const filterClass = `bili-filter-mode-${storage.filterMode}`;
                     card.classList.add(filterClass);
+
+                    if (storage.filterMode === 'tip') {
+                        function getFilterReason() {
+                            if (matchVideoTitleArr.length) {
+                                return `标题包含（${matchVideoTitleArr.join(
+                                    '、'
+                                )}）`;
+                            }
+                            if (matchAuthorNameArr.length) {
+                                return `up名为 ${matchAuthorNameArr[0]}`;
+                            }
+                            return '';
+                        }
+                        card.setAttribute(
+                            'data-filter-reason',
+                            getFilterReason()
+                        );
+                    }
                 }
             }
 
