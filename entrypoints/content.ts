@@ -2,7 +2,7 @@ import '@/assets/css/filterMode.css';
 import { ContentScriptContext, WxtWindowEventMap } from '#imports';
 import { formStorage } from '@/utils/storage';
 import { waitForSelector } from '@/utils/dom';
-import { isArray, isObject } from '@/utils/base';
+import { isArray, isObject, isOnlyQueryDifferent, sleep } from '@/utils/base';
 
 // 综合热门 https://www.bilibili.com/v/popular/all
 // 每周必看 https://www.bilibili.com/v/popular/weekly
@@ -12,6 +12,7 @@ import { isArray, isObject } from '@/utils/base';
 
 // 定义页面配置对象（新增页面时，只需在这里添加一个对象）
 const pageConfigs = [
+    // #region 热门
     {
         name: '综合热门',
         pattern: '*://*.bilibili.com/v/popular/all*',
@@ -155,6 +156,20 @@ const pageConfigs = [
             authorName: '.vidoInfo .info .subtitle .up .upName',
         },
     },
+    // #endregion 热门
+
+    // #region 搜索
+    {
+        name: '搜索',
+        pattern: '*://search.bilibili.com/all*',
+        selectors: {
+            container:
+                '#i_cecream div.search-content--gray.search-content div.search-page-wrapper div.video-list',
+            videoTitle: '.bili-video-card__info--tit',
+            authorName: '.bili-video-card__info--author',
+        },
+    },
+    // #endregion 搜索
     // !WARN 首页必须放在最后
     {
         name: '首页',
@@ -183,9 +198,24 @@ export default defineContentScript({
         // 监听 URL 变化（例如单页应用的路由跳转）
         ctx.addEventListener(window, 'wxt:locationchange', mainScript);
 
-        function mainScript({
+        async function mainScript({
             newUrl,
+            oldUrl,
         }: WxtWindowEventMap['wxt:locationchange']) {
+            // console.log(newUrl, oldUrl);
+            /**
+             * 当 URL 变化时，等待 100ms 确保 DOM 元素加载完成
+             *
+             * 只有搜索才会走入这个逻辑，主要是因为搜索切换分页或者筛选变化时，container的元素会重新加载，
+             * 而其他页面的切换不会重新加载container，所以不需要等待100ms
+             * 另外100ms也可能会失败，设置100ms也是体验和性能的平衡
+             */
+            if (
+                oldUrl?.href.includes('search.bilibili.com/all') &&
+                isOnlyQueryDifferent(newUrl, oldUrl)
+            ) {
+                await sleep(100);
+            }
             // 确保前一个清理操作完成后再进行新的初始化
             cleanupPromise = cleanupPromise.then(() => {
                 // 执行当前的清理函数
@@ -294,8 +324,13 @@ function init(
     ) {
         try {
             // 等待目标元素出现
-            await waitForSelector(selectorForList);
-            const target = document.querySelector(selectorForList);
+            await waitForSelector(selectorForList, [
+                selectorForVideoTitle,
+                selectorForAuthorName,
+            ]);
+            const target = document.querySelector(selectorForList)!;
+            // console.log(target.querySelector(selectorForVideoTitle));
+            // console.log(target.querySelector(selectorForAuthorName));
 
             if (!target) return;
             target.classList.add('bili-filter-container');

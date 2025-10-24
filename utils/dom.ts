@@ -11,6 +11,7 @@
  */
 export function waitForSelector<T extends Element>(
     selector: string,
+    childSelector: string[],
     callback?: (el: T) => void | Promise<void>,
     options: { timeout?: number } = {}
 ): Promise<T> {
@@ -18,24 +19,30 @@ export function waitForSelector<T extends Element>(
 
     return new Promise<T>((resolve, reject) => {
         // 1. 立即检查是否已存在
-        const existing = document.querySelector<T>(selector);
-        if (existing) {
+        const existing = () => {
+            const target = document.querySelector<T>(selector);
+            if (target && childSelector.every(s => target.querySelector(s))) {
+                return target;
+            }
+        };
+        const result = existing();
+        if (result) {
             // 执行回调（异步安全）
-            Promise.resolve(callback?.(existing)).catch(console.error);
-            return resolve(existing);
+            Promise.resolve(callback?.(result)).catch(console.error);
+            return resolve(result);
         }
 
         // 2. 创建观察器监听 DOM 变化
         const observer = new MutationObserver(() => {
-            const el = document.querySelector<T>(selector);
-            if (el) {
+            const result = existing();
+            if (result) {
                 cleanup();
-                Promise.resolve(callback?.(el)).catch(console.error);
-                resolve(el);
+                Promise.resolve(callback?.(result)).catch(console.error);
+                resolve(result);
             }
         });
 
-        observer.observe(document.documentElement, {
+        observer.observe(document.body, {
             childList: true,
             subtree: true,
         });

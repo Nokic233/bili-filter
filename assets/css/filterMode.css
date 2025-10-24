@@ -9,6 +9,7 @@
 
 .bili-filter-mode-hide {
     visibility: hidden !important;
+    /* display: none !important; */
 }
 
 .bili-filter-container {
@@ -17,4 +18,5 @@
 
 .bili-filter-card__init {
     margin-right: 0 !important;
+    margin-top: 0 !important;
 }
