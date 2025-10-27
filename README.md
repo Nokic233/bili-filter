@@ -9,6 +9,16 @@
 
 ---
 
+### 🔧 安装与使用
+
+1. **从 Firefox 商店安装**：
+   * 打开 Firefox 浏览器，访问 [Firefox 商店](https://addons.mozilla.org/zh-CN/firefox/addon/bilifilter-%E9%80%9A%E8%BF%87%E5%85%B3%E9%94%AE%E8%AF%8D%E8%BF%87%E6%BB%A4b%E7%AB%99%E8%A7%86%E9%A2%91/)。
+   * 点击 **添加至 Firefox** 按钮，确认安装。
+2. **从 Edge 商店安装**：
+   * 打开 Edge 浏览器，访问 [Edge 商店](https://microsoftedge.microsoft.com/addons/detail/mdhlabejecfnlmfkoajjoficieadcejl)。
+   * 点击 **添加至 Edge** 按钮，确认安装。
+---
+
 ### ✨ 功能特性
 
 * 🔍 **关键词过滤**：屏蔽包含特定文字的视频标题
