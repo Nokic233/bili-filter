@@ -170,6 +170,26 @@ const pageConfigs = [
         },
     },
     // #endregion 搜索
+    {
+        name: '普通视频',
+        pattern: '*://www.bilibili.com/video/*',
+        selectors: {
+            container:
+                '#mirror-vdcon > div.right-container > div > div.rcmd-tab > div.recommend-list-v1 > div.rec-list',
+            videoTitle: '.title',
+            authorName: '.name',
+        },
+    },
+    {
+        name: '课堂视频',
+        pattern: '*://www.bilibili.com/cheese/play/*',
+        selectors: {
+            container:
+                '#app div.edu-play-main-container div.edu-play-right div.season-recommends.right-box-rect',
+            videoTitle: '.season-title',
+            authorName: '.none',
+        },
+    },
     // !WARN 首页必须放在最后
     {
         name: '首页',
@@ -204,17 +224,16 @@ export default defineContentScript({
         }: WxtWindowEventMap['wxt:locationchange']) {
             // console.log(newUrl, oldUrl);
             /**
-             * 当 URL 变化时，等待 100ms 确保 DOM 元素加载完成
-             *
-             * 只有搜索才会走入这个逻辑，主要是因为搜索切换分页或者筛选变化时，container的元素会重新加载，
-             * 而其他页面的切换不会重新加载container，所以不需要等待100ms
-             * 另外100ms也可能会失败，设置100ms也是体验和性能的平衡
+             * 当 URL 变化时，确保 DOM 元素加载完成
+             * 1、搜索切换分页或者筛选变化
+             * 2、普通视频
              */
             if (
-                oldUrl?.href.includes('search.bilibili.com/all') &&
-                isOnlyQueryDifferent(newUrl, oldUrl)
+                (oldUrl?.href.includes('search.bilibili.com/all') &&
+                    isOnlyQueryDifferent(newUrl, oldUrl)) ||
+                newUrl?.includes('www.bilibili.com/video/')
             ) {
-                await sleep(100);
+                await sleep(400);
             }
             // 确保前一个清理操作完成后再进行新的初始化
             cleanupPromise = cleanupPromise.then(() => {
