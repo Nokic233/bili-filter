@@ -1,6 +1,6 @@
 ## 🧩 B站视频过滤助手
 
-![chrome_BUAII4OAtt.png](https://github.com/Nokic233/bili-filter/blob/master/img/chrome_BUAII4OAtt.png)
+![chrome_BUAII4OAtt.png](https://github.com/Nokic233/bili-filter/blob/master/img/v1.2.0.png)
 
 **让你的B站页面更干净、更专注。**
 
