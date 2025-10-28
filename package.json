@@ -2,7 +2,7 @@
     "name": "bili-filter",
     "description": "B站过滤插件，通过关键词过滤B站视频",
     "private": true,
-    "version": "1.1.0",
+    "version": "1.2.0",
     "type": "module",
     "scripts": {
         "dev": "wxt",
@@ -16,6 +16,7 @@
     },
     "dependencies": {
         "element-plus": "^2.11.5",
+        "matcher": "^6.0.0",
         "vue": "^3.5.22"
     },
     "devDependencies": {

@@ -3,6 +3,7 @@ import { ContentScriptContext, WxtWindowEventMap } from '#imports';
 import { formStorage } from '@/utils/storage';
 import { waitForSelector } from '@/utils/dom';
 import { isArray, isObject, isOnlyQueryDifferent, sleep } from '@/utils/base';
+import { getMatchRules } from '@/utils/matcher';
 
 // 综合热门 https://www.bilibili.com/v/popular/all
 // 每周必看 https://www.bilibili.com/v/popular/weekly
@@ -160,14 +161,40 @@ const pageConfigs = [
 
     // #region 搜索
     {
-        name: '搜索',
+        name: '搜索-综合',
         pattern: '*://search.bilibili.com/all*',
-        selectors: {
-            container:
-                '#i_cecream div.search-content--gray.search-content div.search-page-wrapper div.video-list',
-            videoTitle: '.bili-video-card__info--tit',
-            authorName: '.bili-video-card__info--author',
-        },
+        selectors: [
+            {
+                container:
+                    '#i_cecream div.search-content--gray.search-content div.user-list.search-all-list div.video-list',
+                videoTitle: '.bili-video-card__info--tit',
+                authorName: '.bili-video-card__info--author',
+            },
+            {
+                container:
+                    '#i_cecream div.search-content--gray.search-content div.search-page-wrapper div.i_wrapper.search-all-list div.video-list',
+                videoTitle: '.bili-video-card__info--tit',
+                authorName: '.bili-video-card__info--author',
+            },
+            {
+                container:
+                    '#i_cecream div.search-content--gray.search-content div.search-page-wrapper div.search-page-video.i_wrapper div.video-list',
+                videoTitle: '.bili-video-card__info--tit',
+                authorName: '.bili-video-card__info--author',
+            },
+        ],
+    },
+    {
+        name: '搜索-视频',
+        pattern: '*://search.bilibili.com/video*',
+        selectors: [
+            {
+                container:
+                    '#i_cecream div.search-content div.search-page-wrapper div.search-page-video.i_wrapper div.video-list',
+                videoTitle: '.bili-video-card__info--tit',
+                authorName: '.bili-video-card__info--author',
+            },
+        ],
     },
     // #endregion 搜索
     {
@@ -229,9 +256,9 @@ export default defineContentScript({
              * 2、普通视频
              */
             if (
-                (oldUrl?.href.includes('search.bilibili.com/all') &&
+                (oldUrl?.href.includes('search.bilibili.com/') &&
                     isOnlyQueryDifferent(newUrl, oldUrl)) ||
-                newUrl?.includes('www.bilibili.com/video/')
+                newUrl?.includes?.('www.bilibili.com/video/')
             ) {
                 await sleep(400);
             }
@@ -389,9 +416,11 @@ function init(
                     ''
                 ).trim();
 
-                const matchVideoTitleArr = storage.videoTitle.filter(title =>
-                    videoTitle.includes(title)
+                const matchVideoTitleArr = getMatchRules(
+                    videoTitle,
+                    storage.videoTitle
                 );
+
                 const matchAuthorNameArr = storage.authorName.filter(
                     name => authorName === name
                 );

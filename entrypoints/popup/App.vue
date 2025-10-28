@@ -8,6 +8,7 @@ import {
     ElRadioGroup,
 } from 'element-plus';
 import DynamicTags from '@/components/DynamicTags.vue';
+import Tip from '@/components/Tip.vue';
 import { formStorage } from '@/utils/storage';
 import { name, version } from '@/package.json';
 
@@ -48,9 +49,11 @@ function open(url: string) {
             label-position="top"
             @submit.prevent
         >
-            <el-form-item label="视频标题(模糊匹配)">
+            <el-form-item label="视频标题(通配符)">
                 <DynamicTags
                     v-model:dynamicTags="form.videoTitle"
+                    placeholder="请输入通配符并回车(enter)"
+                    inputType="wildcard"
                 ></DynamicTags>
             </el-form-item>
             <el-form-item label="up名(精确匹配)">
@@ -66,6 +69,8 @@ function open(url: string) {
                 </el-radio-group>
             </el-form-item>
         </el-form>
+
+        <Tip></Tip>
 
         <footer class="footer">
             <el-button

@@ -21,7 +21,7 @@ export function waitForSelector<T extends Element>(
         // 1. 立即检查是否已存在
         const existing = () => {
             const target = document.querySelector<T>(selector);
-            if (target && childSelector.every(s => target.querySelector(s))) {
+            if (target && childSelector.some(s => target.querySelector(s))) {
                 return target;
             }
         };
