@@ -35,7 +35,6 @@
 
 <script lang="ts" setup>
 import { nextTick, ref, computed } from 'vue';
-import { ElTag, ElInput, ElButton } from 'element-plus';
 import type { InputInstance } from 'element-plus';
 
 const props = withDefaults(
@@ -88,7 +87,7 @@ const handleInputConfirm = () => {
 };
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 .comp-dynamic-tags {
     display: flex;
     flex-wrap: wrap;

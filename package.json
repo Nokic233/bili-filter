@@ -21,7 +21,10 @@
     },
     "devDependencies": {
         "@wxt-dev/module-vue": "^1.0.3",
+        "sass-embedded": "^1.93.2",
         "typescript": "^5.9.3",
+        "unplugin-auto-import": "^20.2.0",
+        "unplugin-vue-components": "^30.0.0",
         "vue-tsc": "^3.1.1",
         "wxt": "0.20.9"
     },

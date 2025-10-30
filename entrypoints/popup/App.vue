@@ -1,12 +1,5 @@
 <script lang="ts" setup>
 import { ref, onMounted, toRaw, watch } from 'vue';
-import {
-    ElForm,
-    ElFormItem,
-    ElButton,
-    ElRadio,
-    ElRadioGroup,
-} from 'element-plus';
 import DynamicTags from '@/components/DynamicTags.vue';
 import Tip from '@/components/Tip.vue';
 import { formStorage } from '@/utils/storage';
@@ -90,7 +83,7 @@ function open(url: string) {
     </div>
 </template>
 
-<style scoped>
+<style lang="scss" scoped>
 .title {
     font-size: 20px;
     font-weight: bold;
