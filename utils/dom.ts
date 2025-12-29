@@ -64,3 +64,38 @@ export function waitForSelector<T extends Element>(
         };
     });
 }
+
+/**
+ * 等待元素发生变化（子节点变化或属性变化）
+ * @param element 目标元素
+ * @param timeout 超时时间(ms)
+ */
+export function waitForElementMutation(
+    element: Element,
+    timeout = 2000
+): Promise<void> {
+    return new Promise(resolve => {
+        let isResolved = false;
+        const done = () => {
+            if (!isResolved) {
+                isResolved = true;
+                observer.disconnect();
+                clearTimeout(timer);
+                resolve();
+            }
+        };
+
+        const observer = new MutationObserver(() => done());
+
+        // 监听子节点变化（翻页）或者属性变化
+        observer.observe(element, {
+            childList: true,
+            subtree: true, // 搜索列表可能是 list 下面的 div 变了
+            attributes: true, // 某些容器可能会变 class
+        });
+
+        // 超时也通过（可能是变动太微小没监听到，或者已经变完了）
+        // 我们的目的是“如果不确定，就等一会；如果变了，立即继续”
+        const timer = setTimeout(done, timeout);
+    });
+}

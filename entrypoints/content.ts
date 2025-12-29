@@ -1,9 +1,11 @@
 import '@/assets/css/filterMode.css';
 import { ContentScriptContext, WxtWindowEventMap } from '#imports';
 import { formStorage } from '@/utils/storage';
-import { waitForSelector } from '@/utils/dom';
-import { isArray, isObject, isOnlyQueryDifferent, sleep } from '@/utils/base';
+import { waitForElementMutation, waitForSelector } from '@/utils/dom';
+import { isArray, isObject, isOnlyQueryDifferent } from '@/utils/base';
 import { getMatchRules } from '@/utils/matcher';
+
+// ... (imports)
 
 // 综合热门 https://www.bilibili.com/v/popular/all
 // 每周必看 https://www.bilibili.com/v/popular/weekly
@@ -224,7 +226,7 @@ const pageConfigs = [
         selectors: [
             {
                 container:
-                    '#i_cecream > div.bili-feed4 > main > div.feed2 > div > div.container.is-version8',
+                    '#app > div.bili-feed4 > main > div.feed2 > div > div.container.is-version8',
                 videoTitle: '.bili-video-card__info--tit',
                 authorName: '.bili-video-card__info--author',
             },
@@ -240,7 +242,7 @@ export default defineContentScript({
     matches: ['*://*.bilibili.com/*'],
     main(ctx) {
         // 初次加载执行
-        mainScript({ newUrl: document.location.href });
+        mainScript({ newUrl: new URL(document.location.href) } as any);
 
         // 监听 URL 变化（例如单页应用的路由跳转）
         ctx.addEventListener(window, 'wxt:locationchange', mainScript);
@@ -250,20 +252,9 @@ export default defineContentScript({
             oldUrl,
         }: WxtWindowEventMap['wxt:locationchange']) {
             // console.log(newUrl, oldUrl);
-            /**
-             * 当 URL 变化时，确保 DOM 元素加载完成
-             * 1、搜索切换分页或者筛选变化
-             * 2、普通视频
-             */
-            if (
-                (oldUrl?.href.includes('search.bilibili.com/') &&
-                    isOnlyQueryDifferent(newUrl, oldUrl)) ||
-                newUrl?.includes?.('www.bilibili.com/video/')
-            ) {
-                await sleep(400);
-            }
+
             // 确保前一个清理操作完成后再进行新的初始化
-            cleanupPromise = cleanupPromise.then(() => {
+            cleanupPromise = cleanupPromise.then(async () => {
                 // 执行当前的清理函数
                 if (currentCleanupFunctions.length > 0) {
                     currentCleanupFunctions.forEach(fn => fn && fn());
@@ -273,6 +264,28 @@ export default defineContentScript({
                 // 匹配当前 URL
                 for (const config of pageConfigs) {
                     if (new MatchPattern(config.pattern).includes(newUrl)) {
+                        // 智能等待：如果检测到 URL 变化可能导致的内容更新（如搜索翻页），
+                        // 且旧内容的容器还存在，则等待容器内容变化后再初始化
+                        if (
+                            (oldUrl?.href.includes('search.bilibili.com/') &&
+                                isOnlyQueryDifferent(newUrl, oldUrl)) ||
+                            newUrl?.href?.includes?.('www.bilibili.com/video/')
+                        ) {
+                            const selectors = isArray(config.selectors)
+                                ? config.selectors
+                                : [config.selectors];
+
+                            // 查找当前页面中是否存在旧容器
+                            const existingContainer = selectors
+                                .map(s => document.querySelector(s.container))
+                                .find(el => el);
+
+                            if (existingContainer) {
+                                // 等待旧容器发生变动（翻页/刷新），或者超时自动继续
+                                await waitForElementMutation(existingContainer);
+                            }
+                        }
+
                         if (isObject(config.selectors)) {
                             const cleanupFn = init(
                                 ctx,
@@ -318,36 +331,55 @@ function init(
     selectorForVideoTitle: string,
     selectorForAuthorName: string
 ) {
-    // 存储所有需要清理的函数
-    const cleanupFunctions: Array<() => void> = [];
-    let observer: MutationObserver | null = null;
+    let currentCleanup: (() => void) | null = null;
+    let latestConfigId = 0;
 
-    // 获取存储的过滤条件并应用遮罩
-    const storagePromise = formStorage.getValue().then(async value => {
-        const cleanupFn = await addMask(
-            value,
-            selectorForList,
-            selectorForVideoTitle,
-            selectorForAuthorName
-        );
-        if (cleanupFn) cleanupFunctions.push(cleanupFn);
-    });
+    /**
+     * 应用新的配置规则
+     */
+    const applyConfig = async (storageValue: any) => {
+        // 标记本次更新的 ID
+        const configId = ++latestConfigId;
 
-    // 监听存储变化
-    const unWatch = formStorage.watch(async newValue => {
-        // 如果有旧的观察器，先断开连接
-        if (observer) {
-            observer.disconnect();
-            observer = null;
+        // 立即清理上一次的副作用（断开旧的 observer，取消旧的 mutation 监听等）
+        // 这样可以避免旧的规则和即将生效的新规则冲突
+        if (currentCleanup) {
+            currentCleanup();
+            currentCleanup = null;
         }
 
-        const cleanupFn = await addMask(
-            newValue,
-            selectorForList,
-            selectorForVideoTitle,
-            selectorForAuthorName
-        );
-        if (cleanupFn) cleanupFunctions.push(cleanupFn);
+        try {
+            // 执行添加遮罩的逻辑
+            // 传入 checkCancelled 回调，允许在 await waitForSelector 期间感知配置是否已过期
+            const resultCleanup = await addMask(
+                storageValue,
+                selectorForList,
+                selectorForVideoTitle,
+                selectorForAuthorName,
+                () => configId !== latestConfigId
+            );
+
+            // 如果在 await 期间配置又更新了，那么丢弃本次结果
+            if (configId !== latestConfigId) {
+                if (resultCleanup) resultCleanup();
+                return;
+            }
+
+            // 保存清理函数
+            currentCleanup = resultCleanup || null;
+        } catch (error) {
+            console.error('应用过滤规则时出错:', error);
+        }
+    };
+
+    // 获取存储的初始值并应用
+    const storagePromise = formStorage
+        .getValue()
+        .then(value => applyConfig(value));
+
+    // 监听存储变化
+    const unWatch = formStorage.watch(newValue => {
+        applyConfig(newValue);
     });
 
     /**
@@ -356,6 +388,7 @@ function init(
      * @param selectorForList - 列表容器选择器
      * @param selectorForVideoTitle - 视频标题选择器
      * @param selectorForAuthorName - 作者名称选择器
+     * @param isCancelled - 检查当前任务是否已取消的回调
      * @returns 清理函数
      */
     async function addMask(
@@ -366,19 +399,33 @@ function init(
         },
         selectorForList: string,
         selectorForVideoTitle: string,
-        selectorForAuthorName: string
+        selectorForAuthorName: string,
+        isCancelled: () => boolean
     ) {
         try {
             // 等待目标元素出现
-            await waitForSelector(selectorForList, [
-                selectorForVideoTitle,
-                selectorForAuthorName,
-            ]);
-            const target = document.querySelector(selectorForList)!;
-            // console.log(target.querySelector(selectorForVideoTitle));
-            // console.log(target.querySelector(selectorForAuthorName));
+            // 如果超时，说明当前页面可能不包含此容器（多选一的情况），或者加载过慢
+            // 这里的 catch 旨在消除非必要的控制台报错
+            try {
+                await waitForSelector(
+                    selectorForList,
+                    [selectorForVideoTitle, selectorForAuthorName],
+                    undefined,
+                    { timeout: 10000 } // 给够时间，避免网络慢导致误判
+                );
+            } catch (err) {
+                // 如果是超时错误，且任务未取消，则认为是多选一未匹配到，静默失败
+                // 仅在开发模式下或必要时打印
+                // console.debug('waitForSelector timeout (expected for unmatched layout):', selectorForList);
+                return;
+            }
 
+            // 如果在等待期间配置已过期，直接返回
+            if (isCancelled()) return;
+
+            const target = document.querySelector(selectorForList)!;
             if (!target) return;
+
             target.classList.add('bili-filter-container');
 
             /**
@@ -457,7 +504,7 @@ function init(
             }
 
             // 设置观察器监听新增节点
-            observer = new MutationObserver(mutationsList => {
+            const observer = new MutationObserver(mutationsList => {
                 for (const mutation of mutationsList) {
                     if (
                         mutation.type === 'childList' &&
@@ -478,7 +525,6 @@ function init(
             return () => {
                 if (observer) {
                     observer.disconnect();
-                    observer = null;
                 }
             };
         } catch (error) {
@@ -488,20 +534,14 @@ function init(
 
     // 返回主清理函数
     return () => {
-        // 确保存储操作完成
         storagePromise.then(() => {
-            // 执行所有清理函数
-            cleanupFunctions.forEach(fn => fn && fn());
-            cleanupFunctions.length = 0;
-
+            // 清理当前的副作用
+            if (currentCleanup) {
+                currentCleanup();
+                currentCleanup = null;
+            }
             // 断开存储监听
             unWatch();
-
-            // 确保观察器被断开连接
-            if (observer) {
-                observer.disconnect();
-                observer = null;
-            }
         });
     };
 }
