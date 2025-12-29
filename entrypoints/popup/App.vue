@@ -49,9 +49,11 @@ function open(url: string) {
                     inputType="wildcard"
                 ></DynamicTags>
             </el-form-item>
-            <el-form-item label="up名(精确匹配)">
+            <el-form-item label="up名(通配符)">
                 <DynamicTags
                     v-model:dynamicTags="form.authorName"
+                    placeholder="请输入通配符并回车(enter)"
+                    inputType="wildcard"
                 ></DynamicTags>
             </el-form-item>
             <el-form-item label="过滤模式">

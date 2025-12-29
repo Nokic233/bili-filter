@@ -468,8 +468,9 @@ function init(
                     storage.videoTitle
                 );
 
-                const matchAuthorNameArr = storage.authorName.filter(
-                    name => authorName === name
+                const matchAuthorNameArr = getMatchRules(
+                    authorName,
+                    storage.authorName
                 );
 
                 if (matchVideoTitleArr.length || matchAuthorNameArr.length) {
@@ -478,15 +479,22 @@ function init(
 
                     if (storage.filterMode === 'tip') {
                         function getFilterReason() {
+                            const reasons: string[] = [];
                             if (matchVideoTitleArr.length) {
-                                return `标题包含（${matchVideoTitleArr.join(
-                                    '、'
-                                )}）`;
+                                reasons.push(
+                                    `标题包含（${matchVideoTitleArr.join(
+                                        '、'
+                                    )}）`
+                                );
                             }
                             if (matchAuthorNameArr.length) {
-                                return `up名为 ${matchAuthorNameArr[0]}`;
+                                reasons.push(
+                                    `up名包含（${matchAuthorNameArr.join(
+                                        '、'
+                                    )}）`
+                                );
                             }
-                            return '';
+                            return reasons.join('；');
                         }
                         card.setAttribute(
                             'data-filter-reason',
