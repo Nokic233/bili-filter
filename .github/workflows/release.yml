@@ -4,6 +4,7 @@ on:
     push:
         tags:
             - 'v*' # 当推送 v 开头的 tag 时触发，如 v1.4.0
+    workflow_dispatch:
 
 jobs:
     build-and-release:
