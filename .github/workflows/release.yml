@@ -73,6 +73,12 @@ jobs:
                   echo "2. 打开 \`about:debugging#/runtime/this-firefox\`" >> release_notes.md
                   echo "3. 点击「临时载入附加组件」" >> release_notes.md
                   echo "4. 选择解压后的 zip 文件" >> release_notes.md
+                  echo "" >> release_notes.md
+                  echo "**Edge 浏览器：**" >> release_notes.md
+                  echo "1. 下载 \`bili-filter-${{ steps.get_version.outputs.VERSION }}-chrome.zip\`（Edge 兼容 Chrome 扩展）" >> release_notes.md
+                  echo "2. 打开 \`edge://extensions/\`" >> release_notes.md
+                  echo "3. 开启「开发人员模式」" >> release_notes.md
+                  echo "4. 解压 zip 文件，将文件夹拖入浏览器" >> release_notes.md
 
             - name: Create Release
               uses: softprops/action-gh-release@v2
@@ -84,5 +90,6 @@ jobs:
                   files: |
                       .output/bili-filter-${{ steps.get_version.outputs.VERSION }}-chrome.zip
                       .output/bili-filter-${{ steps.get_version.outputs.VERSION }}-firefox.zip
+                      .output/bili-filter-${{ steps.get_version.outputs.VERSION }}-sources.zip
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
