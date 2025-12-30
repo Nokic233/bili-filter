@@ -1,0 +1,88 @@
+name: Build and Release
+
+on:
+    push:
+        tags:
+            - 'v*' # 当推送 v 开头的 tag 时触发，如 v1.4.0
+
+jobs:
+    build-and-release:
+        runs-on: ubuntu-latest
+
+        permissions:
+            contents: write # 需要写入权限来创建 release
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0 # 获取完整历史，用于生成更新日志
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: '22'
+                  cache: 'npm'
+
+            - name: Install dependencies
+              run: npm ci
+
+            - name: Build Chrome extension
+              run: npm run zip
+
+            - name: Build Firefox extension
+              run: npm run zip:firefox
+
+            - name: Get version from tag
+              id: get_version
+              run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+            - name: Generate release notes
+              id: release_notes
+              run: |
+                  # 获取上一个 tag
+                  PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+
+                  if [ -z "$PREV_TAG" ]; then
+                    # 如果没有上一个 tag，获取所有提交
+                    COMMITS=$(git log --pretty=format:"- %s" --no-merges)
+                  else
+                    # 获取两个 tag 之间的提交
+                    COMMITS=$(git log ${PREV_TAG}..HEAD --pretty=format:"- %s" --no-merges)
+                  fi
+
+                  # 将多行内容写入文件
+                  echo "## 🎉 版本 ${{ steps.get_version.outputs.VERSION }} 更新内容" > release_notes.md
+                  echo "" >> release_notes.md
+                  echo "### 📝 更新日志" >> release_notes.md
+                  echo "" >> release_notes.md
+                  echo "$COMMITS" >> release_notes.md
+                  echo "" >> release_notes.md
+                  echo "---" >> release_notes.md
+                  echo "" >> release_notes.md
+                  echo "### 📦 安装说明" >> release_notes.md
+                  echo "" >> release_notes.md
+                  echo "**Chrome 浏览器：**" >> release_notes.md
+                  echo "1. 下载 \`bili-filter-${{ steps.get_version.outputs.VERSION }}-chrome.zip\`" >> release_notes.md
+                  echo "2. 打开 \`chrome://extensions/\`" >> release_notes.md
+                  echo "3. 开启「开发者模式」" >> release_notes.md
+                  echo "4. 解压 zip 文件，将文件夹拖入浏览器" >> release_notes.md
+                  echo "" >> release_notes.md
+                  echo "**Firefox 浏览器：**" >> release_notes.md
+                  echo "1. 下载 \`bili-filter-${{ steps.get_version.outputs.VERSION }}-firefox.zip\`" >> release_notes.md
+                  echo "2. 打开 \`about:debugging#/runtime/this-firefox\`" >> release_notes.md
+                  echo "3. 点击「临时载入附加组件」" >> release_notes.md
+                  echo "4. 选择解压后的 zip 文件" >> release_notes.md
+
+            - name: Create Release
+              uses: softprops/action-gh-release@v2
+              with:
+                  name: 'V${{ steps.get_version.outputs.VERSION }}'
+                  body_path: release_notes.md
+                  draft: false
+                  prerelease: false
+                  files: |
+                      .output/bili-filter-${{ steps.get_version.outputs.VERSION }}-chrome.zip
+                      .output/bili-filter-${{ steps.get_version.outputs.VERSION }}-firefox.zip
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
