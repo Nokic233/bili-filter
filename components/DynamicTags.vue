@@ -1,21 +1,31 @@
 <template>
     <div class="comp-dynamic-tags">
-        <el-tag
-            v-for="tag in dynamicTags"
-            :key="tag"
-            :type="hasNegated(tag)"
-            size="large"
-            closable
-            :disable-transitions="false"
-            @close="handleClose(tag)"
-        >
-            {{ tag }}
-        </el-tag>
+        <template v-for="(tag, index) in dynamicTags" :key="index">
+            <el-input
+                v-if="editIndex === index"
+                :ref="setEditRef"
+                v-model="editInputValue"
+                size="default"
+                @keyup.enter="handleEditConfirm"
+                @blur="handleEditConfirm"
+            />
+            <el-tag
+                v-else
+                :key="tag"
+                :type="hasNegated(tag)"
+                size="large"
+                closable
+                :disable-transitions="true"
+                @close="handleClose(tag)"
+                @click="handleEdit(tag, index)"
+            >
+                {{ tag }}
+            </el-tag>
+        </template>
         <el-input
             v-if="inputVisible"
             ref="InputRef"
             v-model="inputValue"
-            class="w-20"
             size="default"
             :placeholder="props.placeholder"
             @keyup.enter="handleInputConfirm"
@@ -57,6 +67,31 @@ const isWildcard = computed(() => props.inputType === 'wildcard');
 function hasNegated(tag: string) {
     return tag.startsWith('!') && isWildcard.value ? 'success' : 'primary';
 }
+
+const editIndex = ref(-1);
+const editInputValue = ref('');
+let activeEditInput: InputInstance | null = null;
+
+const setEditRef = (el: any) => {
+    if (el) activeEditInput = el;
+};
+
+const handleEdit = (tag: string, index: number) => {
+    editIndex.value = index;
+    editInputValue.value = tag;
+    nextTick(() => {
+        activeEditInput?.input?.focus();
+    });
+};
+
+const handleEditConfirm = () => {
+    if (editIndex.value !== -1) {
+        if (editInputValue.value) {
+            dynamicTags.value[editIndex.value] = editInputValue.value;
+        }
+        editIndex.value = -1;
+    }
+};
 
 const handleClose = (tag: string) => {
     dynamicTags.value.splice(dynamicTags.value.indexOf(tag), 1);
