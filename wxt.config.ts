@@ -5,7 +5,11 @@ import { ElementPlusResolver } from 'unplugin-vue-components/resolvers';
 
 // See https://wxt.dev/api/config.html
 export default defineConfig({
-    modules: ['@wxt-dev/module-vue'],
+    modules: ['@wxt-dev/module-vue', '@wxt-dev/auto-icons'],
+    autoIcons: {
+        developmentIndicator: false,
+        sizes: [24, 64],
+    },
     manifest: {
         // These permissions are required for "webext-dynamic-content-scripts" and
         // "webext-permission-toggle" to work.
