@@ -94,3 +94,15 @@ jobs:
                       .output/bili-filter-${{ steps.get_version.outputs.VERSION }}-sources.zip
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+            # ====================================
+            # 自动发布到扩展商店
+            # ====================================
+            - name: Submit to Edge Add-ons
+              run: |
+                  npx wxt submit \
+                    --edge-zip .output/bili-filter-${{ steps.get_version.outputs.VERSION }}-chrome.zip
+              env:
+                  EDGE_CLIENT_ID: ${{ secrets.EDGE_CLIENT_ID }}
+                  EDGE_API_KEY: ${{ secrets.EDGE_API_KEY }}
+                  EDGE_PRODUCT_ID: ${{ secrets.EDGE_PRODUCT_ID }}

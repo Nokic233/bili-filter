@@ -2,7 +2,7 @@
     "name": "bili-filter",
     "description": "B站过滤插件，通过关键词过滤B站视频",
     "private": true,
-    "version": "1.4.1",
+    "version": "1.4.2",
     "type": "module",
     "scripts": {
         "dev": "wxt",
@@ -11,6 +11,10 @@
         "build:firefox": "wxt build -b firefox",
         "zip": "wxt zip",
         "zip:firefox": "wxt zip -b firefox",
+        "zip:all": "wxt zip && wxt zip -b firefox",
+        "submit": "wxt submit --firefox-zip .output/*-firefox.zip --firefox-sources-zip .output/*-sources.zip --edge-zip .output/*-chrome.zip",
+        "submit:firefox": "wxt submit --firefox-zip .output/*-firefox.zip --firefox-sources-zip .output/*-sources.zip",
+        "submit:edge": "wxt submit --edge-zip .output/*-chrome.zip",
         "compile": "vue-tsc --noEmit",
         "postinstall": "wxt prepare"
     },
